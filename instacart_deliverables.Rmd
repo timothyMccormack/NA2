@@ -1,0 +1,391 @@
+---
+title: "instacart_deliverables"
+author: "Julian Palazzo"
+date: "11/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(dplyr)
+library(tidyverse)
+
+```
+
+
+```{r}
+proj.dir <- "/Users/julianpalazzo/New College of Florida/Fall Semester 2020/CAP5322 Databases for Data Science/Project 1"
+data.dir <- "instacart-market-basket-analysis"
+```
+
+
+# READ IN INSTACART CSV FILES
+```{r}
+aisles <- read.csv(file = file.path(proj.dir, data.dir, "aisles.csv"))
+
+departments <- read.csv(file = file.path(proj.dir, data.dir, "departments.csv"))
+
+products <- read.csv(file = file.path(proj.dir, data.dir, "products.csv"))
+
+orders <- read.csv(file = file.path(proj.dir, data.dir, "orders.csv"))
+
+orderproducts <- read.csv(file = file.path(proj.dir, data.dir, "order_products__prior.csv"))
+
+```
+
+
+
+# REORDERS
+
+```{r message=FALSE, warning=FALSE}
+
+reorders <- subset(orderproducts, reordered==1)
+
+reorders <- merge(reorders, orders, by='order_id')
+
+reorders <- merge(reorders, products, by='product_id')
+
+reorders <- merge(reorders, aisles, by='aisle_id')
+
+reorders <- merge(reorders, departments, by='department_id')
+
+# SAME as table reordered_products in PSQL after merging with products
+product.counts <- reorders %>%
+  group_by(product_id) %>%
+  summarise(reorder_count = sum(reordered)) 
+product.counts <- merge(product.counts, products, by='product_id')
+
+# # Average # of times a product is reordered
+# mean(product.counts$reorder_count)
+
+```
+
+
+
+
+# AISLES
+
+```{r}
+# SAME as table aisle_reorders in PSQL
+aisle.counts <- merge(product.counts, aisles, by='aisle_id')
+aisle.counts <- aisle.counts %>%
+  group_by(aisle_id, aisle) %>%
+  summarise(reorder_count = sum(reorder_count))
+
+# nrow(aisle.counts) == nrow(aisles)
+```
+
+# GROUP BY TIME OF DAY and PLOT REORDER COUNT FOR EACH AISLE
+```{r message=FALSE, warning=FALSE}
+# Select aisles and reorder-count for each aisle, grouped by hour of day
+aisle.time <- reorders %>%
+  group_by(order_hour_of_day, aisle) %>%
+  summarise(reorder_count = sum(reordered))
+
+# barplot(aisle.time$reorder_count, aisle.time$order_hour_of_day)
+
+ggplot(aisle.time, aes(order_hour_of_day, reorder_count, color=as.factor(aisle))) +
+  geom_line() +
+  geom_hline(yintercept = median(aisle.counts$reorder_count), linetype='dashed',
+             color='black') +
+  ylab('Reorder Count') +
+  xlab('Hour of Day') +
+  ggtitle('Reorder Counts by Aisle with dotted-line at Median') +
+  theme(plot.title=element_text(hjust=0.5), legend.position = "") # Removes legend 
+
+
+# pop.aisles <- subset(aisle.counts, reorder_count >= mean(aisle.counts$reorder_count))
+# # pop.aisles <- merge(pop.aisles, reorders, all.x=TRUE )
+# 
+# aisle.med <- aisle.time %>%
+#   group_by(order_hour_of_day) %>%
+#   summarise(median_count = median(reorder_count))
+# aisle.med
+# barplot(aisle.med$median_count, names.arg = aisle.med$order_hour_of_day, main="Median Reorder Count by Time of Day")
+# 
+# aisle.mean <- aisle.time %>%
+#   group_by(order_hour_of_day) %>%
+#   summarise(mean_count = mean(reorder_count))
+# aisle.mean
+# barplot(aisle.mean$mean_count, names.arg = aisle.mean$order_hour_of_day, main="Average Reorder Count by Time of Day")
+
+
+
+
+
+# Subset aisles & hour of day with reorder counts > median reorder count for all aisles
+subset(aisle.time, reorder_count >= median(aisle.counts$reorder_count)) %>%
+  ggplot(aes(order_hour_of_day, reorder_count, color=as.factor(aisle))) +
+  geom_line() +
+  theme(plot.title=element_text(hjust=0.5), legend.title = element_blank()) +
+  ggtitle('Reorder Counts > Median by Aisle')
+
+
+# 
+# subset(aisle.time, reorder_count >= aisle.med$median_count) %>%
+#   ggplot(aes(order_hour_of_day, reorder_count, color=as.factor(aisle))) +
+#   geom_line() +
+#   theme(plot.title=element_text(hjust=0.5), legend.title = element_blank(),
+#         legend.position = "") +
+#   ggtitle('Reorder Counts > Median by Aisle')
+
+
+
+```
+
+<!-- # REORDERS PER AISLE GROUPED BY DAY OF WEEK -->
+<!-- ```{r} -->
+<!-- aisle.dow <- reorders %>% -->
+<!--   group_by(order_dow, aisle) %>% -->
+<!--   summarise(reorder_count = sum(reordered)) -->
+<!-- aisle.dow -->
+<!-- ``` -->
+
+
+
+# PIE CHART OF REORDER COUNT BY AISLE
+
+```{r}
+# x11()
+
+# pie(aisle.counts$reorder_count, labels=aisle.counts$aisle)
+
+# barplot(aisle.counts$reorder_count) + 
+#   abline(h=mean(aisle.counts$reorder_count), lwd=2, col='green')
+
+barplot(t(prop.table(aisle.counts$reorder_count)), main="Distribution of Reorders by Aisle with line at Median") +
+  abline(h=mean(prop.table(aisle.counts$reorder_count)), lwd=2, col='green')
+# 
+# barplot(t(prop.table(aisle.counts$reorder_count))) +
+#   abline(h=mean(prop.table(aisle.counts$reorder_count)), lwd=2, col='green') +
+#   text(max(prop.table(aisle.counts$reorder_count)),
+#        labels=c(aisle.counts$aisle[prop.table(aisle.counts$reorder_count) > 0.08]))
+
+
+
+
+
+aisle.counts$aisle[aisle.counts$reorder_count > (mean(aisle.counts$reorder_count)+(1.5*sd(aisle.counts$reorder_count)))]
+
+
+
+# bp <-ggplot(aisle.counts, aes(x='', y=reorder_count, fill=aisle)) +
+#   geom_bar(width=1,stat='identity')
+# pie <- bp + coord_polar("y", start=0)
+# pie
+
+
+# # From Slides_5_rev.r
+# org_vs_conv <- matrix(c(29,98,19485,7086), 2, byrow=T)
+# prop.table(org_vs_conv, margin=1)
+# barplot(t(prop.table(org_vs_conv, margin=1)),
+#         names.arg = c("Organic", "Conventional"))
+```
+
+
+# DEPARMENTS
+
+```{r}
+# SAME as table department_reorders in PSQL
+dept.counts <- merge(product.counts, departments, by='department_id')
+dept.counts <- dept.counts %>%
+  group_by(department_id, department) %>%
+  summarise(reorder_count = sum(reorder_count))
+dept.counts <- dept.counts[order(-dept.counts$reorder_count),]
+# nrow(dept.counts) == nrow(departments)
+```
+
+```{r}
+# pie(dept.counts$reorder_count, labels=dept.counts$department)
+
+above.avg <- c(dept.counts$reorder_count > mean(dept.counts$reorder_count))
+pie(dept.counts$reorder_count, labels=dept.counts$department[above.avg])
+
+# pie(dept.counts$reorder_count, labels=dept.counts$department[dept.counts$reorder_count > mean(dept.counts$reorder_count)])
+
+```
+
+# GROUP BY TIME OF DAY and PLOT REORDER COUNT FOR EACH DEPARTMENT
+```{r message=FALSE, warning=FALSE}
+# Select departments and reorder-count for each department, grouped by hour of day
+dept.time <- reorders %>%
+  group_by(order_hour_of_day, department) %>%
+  summarise(reorder_count = sum(reordered))
+
+# barplot(dept.time$reorder_count, dept.time$order_hour_of_day)
+
+ggplot(dept.time, aes(order_hour_of_day, reorder_count/(10**3), color=as.factor(department))) +
+  geom_line() +
+  ylab('Reorder Count (thousands)') +
+  xlab('Hour of Day') +
+  theme(plot.title=element_text(hjust=0.5), legend.title = element_blank()) +
+  ggtitle('Reorder Counts by Department')
+
+# arrange(dept.time, .by_group = TRUE)
+# dept.time  
+```
+
+
+# REORDERS PER DEPARTMENT GROUPED BY DAY OF WEEK
+```{r message=FALSE, warning=FALSE}
+dept.dow <- reorders %>%
+  group_by(order_dow, department) %>%
+  summarise(reorder_count = sum(reordered))
+# dept.dow[order_dow == 0] <- 'sunday'
+
+ggplot(dept.dow, aes(order_dow, reorder_count/(10**3), color=as.factor(department))) +
+  geom_line() +
+  ylab('Reorder Count (thousands)') +
+  xlab('Day of Week') +
+  theme(plot.title=element_text(hjust=0.5), legend.title = element_blank()) +
+  ggtitle('Reorder Counts by Department')
+```
+
+
+# PRODUCE
+
+```{r message=FALSE, warning=FALSE}
+produce <- subset(reorders, department=='produce')
+
+p <- produce %>%
+  group_by(product_name) %>%
+  summarise(reorder_count = sum(reordered))
+
+
+# pie(p$reorder_count, labels="")
+
+
+p <-  p[order(-p$reorder_count),]
+p = within(p, {product_name = factor(product_name, levels = product_name)})
+most_popular_produce <- p$product_name[p$reorder_count > mean(p$reorder_count)]
+most_popular_produce <- subset(p, product_name == most_popular_produce)
+length(most_popular_produce)
+pie(most_popular_produce$reorder_count, labels=p$product_name[p$reorder_count >= (mean(p$reorder_count)+(10*sd(p$reorder_count)))], main="Distribution of Produce Reorders")
+
+# library(ggplot2)
+# p <-  p[order(-p$reorder_count),]
+# p = within(p, {product_name = factor(product_name, levels = product_name)})
+# ggplot(p, aes(x = product_name, y = reorder_count)) + geom_point()
+
+```
+
+
+
+# MOST POPULAR AISLES WITHIN EACH DEPARTMENT
+
+```{r message=FALSE, warning=FALSE}
+dept.aisle <- reorders %>%
+  group_by(department, aisle) %>%
+  summarise(reorder_count = sum(reordered))
+dept.aisle <- dept.aisle[order(-dept.aisle$reorder_count),]
+# dept.aisle
+
+dept.counts
+
+dept.aisle
+
+produce <- subset(dept.aisle, department=="produce")
+# produce
+pie(produce$reorder_count, labels=produce$aisle, main="Produce (32.2% of reorders)")
+prop.produce <- sum(produce$reorder_count)/sum(dept.aisle$reorder_count)
+# prop.produce
+
+dairy <- subset(dept.aisle, department == "dairy eggs")
+# dairy
+pie(dairy$reorder_count, labels=dairy$aisle[dairy$reorder_count > (mean(dairy$reorder_count)-(1.05*sd(dairy$reorder_count)))], main="Dairy & Eggs (19% of reorders)")
+prop.dairy <- sum(dairy$reorder_count)/sum(dept.aisle$reorder_count)
+# prop.dairy
+
+
+beverages <- subset(dept.aisle, department == "beverages")
+# beverages
+pie(beverages$reorder_count, labels=beverages$aisle[beverages$reorder_count > (mean(beverages$reorder_count)-(2*sd(beverages$reorder_count)))], main="Beverages (9.2% of reorders)")
+prop.beverages <- sum(beverages$reorder_count)/sum(dept.aisle$reorder_count)
+# prop.beverages
+
+
+snacks <- subset(dept.aisle, department == "snacks")
+# snacks
+prop.snacks <- sum(snacks$reorder_count)/sum(dept.aisle$reorder_count)
+# prop.snacks
+pie(snacks$reorder_count, labels=snacks$aisle[snacks$reorder_count > (mean(snacks$reorder_count)-(.5*sd(snacks$reorder_count)))], main="Snacks (8.7% of reorders)")
+
+
+frozen <- subset(dept.aisle, department == "frozen")
+# frozen
+prop.frozen <- sum(frozen$reorder_count)/sum(dept.aisle$reorder_count)
+# prop.frozen
+pie(frozen$reorder_count, labels=frozen$aisle[frozen$reorder_count > ((mean(frozen$reorder_count)-(.5*sd(frozen$reorder_count))))], main="Frozen (6.3% of reorders)")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
