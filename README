@@ -1,0 +1,9 @@
+Welcome our Insta-cart Inference Project
+
+How to fire up the site:
+
+1) export FLASK_APP=hello.py
+
+2) python3 -m flask run --port=5020 <you may enter your own port>
+
+3) Open a browser and enter 'http://127.0.0.1:5020/' <change port if necessary>

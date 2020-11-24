@@ -1,0 +1,50 @@
+<html>
+  <head>
+
+    <title>{{title}} </title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+  <style>
+    .conainter{pisition:relative;
+    }
+    .topright{position: absolute;
+    top: 8px;
+    right:16px;
+    font-size:18px;}
+  </style>
+  
+  <button id = "click1">About The Team</button>
+  <button id = "click2">The Task</button>
+  <button id = "click5">Products</button>
+  
+    <input type = "button" value="Departments & Aisles" onclick="parent.location = 'da'" />
+
+  <input type = "button" value="Orders" onclick="parent.location = 'orders'" />
+  <input type = "button" value="Users" onclick="parent.location = 'users'" />
+  
+ 
+  <div class="topright">
+    <img src = "/static/img/homef.png" alt ="homef" width="50" height="50">
+    
+  </div>
+  
+  <body style ="background-color:lavender;">
+    <h1 style="font-family:courier; color:black; ">{{ title }}</h1>
+         <button id="click">Click Me For Ajax</button>
+         <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+         <img src = "/static/img/erd.png" alt ="erd"> 
+	 <script>
+	   $('#click').click(function(){
+                  $.ajax({
+	           type: 'GET',
+	           url: '/data',
+	           success:function (response){
+                      alert(JSON.stringify(response));
+	           }
+	      });
+	   });
+	   
+	 </script>
+  </body>
+ </html>
+

@@ -1,0 +1,24 @@
+<html>
+  <head>
+
+    <title>{{title2}} </title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+
+  <h1 style = "color:black; font-family:courier; ">Orders In A Day</h1>
+  <body style ="background-color:lavender;">
+    <img src = "/static/img/ordersOfday.png" alt ="homef" width="550" height="550" >
+    
+    <span style = "padding-left:100px">
+    <h3></h3>
+      
+    &nbsp;
+    <img src = "/static/img/hours.png" alt ="hours" width="550" height="550" >
+    <h2 style = "color:black; font-family:courier;">Order Sizes</h2>
+    <img src = "/static/img/circle_op.png" alt ="circ" width="550" height="550" >
+    <h4></h4>
+    <img src = "/static/img/orderSize2.png" alt ="os" width="1000" height="550" >
+    <h5></h5>
+    <h6>Orders in a Week</h6>
+    
+</html>

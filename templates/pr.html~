@@ -1,0 +1,42 @@
+<html>
+  <head>
+
+    <title>Products </title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+
+  <h1 style = "color:black; font-family:courier; ">Products</h1>
+  <body style ="background-color:lavender;">
+    <img src = "/static/img/a1.png" alt ="opu" width="1000" height="550" >   
+    <span style = "padding-left:100px">
+    <h3></h3>
+      
+    <h2 style = "color:black; font-family:courier;">Departments & Aisles</h2>
+    <h4></h4>
+    <img src = "/static/img/a2.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    <img src = "/static/img/a3.png" alt ="u3id" width="750" height="1000" >
+    <h5></h5>
+    <img src = "/static/img/a4.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    <img src = "/static/img/a5.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    <img src = "/static/img/a6.png" alt ="uid" width="750" height="1000" >
+    <h5></h5>
+    <img src = "/static/img/b1.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    <img src = "/static/img/b2.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    <img src = "/static/img/b3.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    <img src = "/static/img/b4.png" alt ="uid" width="750" height="1000" >
+    <h5></h5>
+    <img src = "/static/img/b5.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    <img src = "/static/img/b6.png" alt ="uid" width="750" height="550" >
+    <h5></h5>
+    
+    
+	   
+    <h6></h6>
+</html>
